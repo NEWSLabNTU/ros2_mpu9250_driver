@@ -9,8 +9,12 @@ extern "C" {
 #include <unistd.h>
 }
 
+#include <chrono>
 #include <iostream>
 #include <string>
+
+// Define the static member
+constexpr std::chrono::seconds LinuxI2cCommunicator::error_interval_;
 
 LinuxI2cCommunicator::LinuxI2cCommunicator(int bus_number)
 {
@@ -44,5 +48,9 @@ char LinuxI2cCommunicator::getFile() { return file_; }
 
 void LinuxI2cCommunicator::reportError(int error)
 {
-  std::cerr << "Error! Errno: " << strerror(error) << std::endl;
+  auto now = std::chrono::steady_clock::now();
+  if (now - last_error_time_ >= error_interval_) {
+    std::cerr << "Error! Errno: " << strerror(error) << std::endl;
+    last_error_time_ = now;
+  }
 }
